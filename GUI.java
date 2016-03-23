@@ -64,8 +64,8 @@ public class GUI extends JPanel implements ActionListener{
     /**
      * The size of the world
      */
-    public static final int WORLD_SIZE = 600;
-    public static final double DWORLD_SIZE = 600;
+    public static final int WORLD_SIZE = 1200;
+    public static final int DWORLD_SIZE = 900;
 
     /******************************************************************
      * GUI constructor (default)  instantiates a new asteroid and a
@@ -77,7 +77,7 @@ public class GUI extends JPanel implements ActionListener{
 
         this.game = game;
 
-        setPreferredSize(new Dimension(WORLD_SIZE, WORLD_SIZE));
+        setPreferredSize(new Dimension(WORLD_SIZE, DWORLD_SIZE));
         setBackground(Color.GRAY);
 
         //initialize main screen
