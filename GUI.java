@@ -11,6 +11,10 @@ import javax.swing.JPanel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -21,6 +25,7 @@ import java.util.Vector;
  * Created by tyleranson on 2/15/16.
  *********************************************************************/
 public class GUI extends JPanel implements ActionListener{
+
 
 
     private Game game;
@@ -72,8 +77,6 @@ public class GUI extends JPanel implements ActionListener{
 
         this.game = game;
 
-
-
         setPreferredSize(new Dimension(WORLD_SIZE, WORLD_SIZE));
         setBackground(Color.GRAY);
 
@@ -123,8 +126,6 @@ public class GUI extends JPanel implements ActionListener{
 
     public void buttons(){
 
-
-
 //        Insets r = new Insets(40,50,60,70);
 
         //title screen buttons
@@ -140,8 +141,8 @@ public class GUI extends JPanel implements ActionListener{
         startButton.setForeground(Color.blue);
         startButton.setFocusable(true);
         startButton.setContentAreaFilled(true);
-//        startButton.setMargin(r);
 
+//        startButton.setMargin(r);
 
         optionsButton = new JButton("OPTIONS");
         optionsButton.addActionListener(this);
@@ -228,6 +229,7 @@ public class GUI extends JPanel implements ActionListener{
         insaneButton.setFocusPainted(true);
         insaneButton.setForeground(Color.blue);
         insaneButton.setFocusable(true);
+
     }
 
     public void screenViews(){
@@ -263,7 +265,7 @@ public class GUI extends JPanel implements ActionListener{
         astroyd.setText("ASTROYED");
         astroyd.setFont(new Font("Serif", Font.BOLD , 60));
         astroyd.setSize(200,200);
-        astroyd.setForeground(Color.white);
+        astroyd.setForeground(Color.BLUE);
 
         options  = new JLabel();
         options.setText("OPTIONS");
@@ -322,7 +324,7 @@ public class GUI extends JPanel implements ActionListener{
 //
 //            }
 //        };
-//        timeAttackScreen.add(a);
+//        timeAttackScreen.add(g);
     }
     /******************************************************************
      * main method of the GUI that makes an instance of the GUI
@@ -361,6 +363,9 @@ public class GUI extends JPanel implements ActionListener{
         if(restart == clickTarget){
             screens.show(gameContainer, "title");
         }
+
+
+
     }
 
     @Override
@@ -390,6 +395,7 @@ public class GUI extends JPanel implements ActionListener{
     }
 
     private void drawEntity(Graphics2D g2d, Entity entity, double x, double y) {
+
         g2d.translate(x, y);
         double rotation = entity.getRotation();
         if(rotation != 0.0f) {

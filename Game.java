@@ -7,13 +7,17 @@ import package1.game.entity.Ship;
 import package1.game.gameUtil.Movement;
 
 import javax.swing.*;
+import javax.swing.Timer;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.util.ArrayList;
-import java.util.LinkedList;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.List;
-import java.util.Random;
 
 /**
  * Created by tyleranson on 3/15/16.
@@ -59,14 +63,18 @@ public class Game extends JFrame {
     private GameClockTimer timer;
 
 
+
+
     private Game() {
         super("ASTROYED");
 
+
         setLayout(new BorderLayout());
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setResizable(true);
+        setResizable(false);
 
         add(this.gui = new GUI(this), BorderLayout.CENTER);
+
 
         addKeyListener(new KeyAdapter(){ /******************************************************************
          * keyPressed method determines what keys are being pressed in
@@ -79,62 +87,33 @@ public class Game extends JFrame {
             if(code == KeyEvent.VK_UP){// && (!downPressed)){
                 rocketShip.setUpPressed(true);
             }
-            //if((code == KeyEvent.VK_UP) && (downPressed)){
-            //}
             if(code == KeyEvent.VK_DOWN){
                 rocketShip.setDownPressed(true);
             }
-            //if((code == KeyEvent.VK_DOWN) && (upPressed)){
-            //    rocketShip.setY(20);
-            //    downPressed = true;
-            //}
             if(code == KeyEvent.VK_LEFT){
                 rocketShip.setLeftPressed(true);
-
-                // ship.paintIcon(this, g2, x, y);
             }
-            //if((code == KeyEvent.VK_LEFT) && (rightPressed)){
-            //    rocketShip.setX(0);
-            //    leftPressed = true;
-            //}
             if(code == KeyEvent.VK_RIGHT){
                 rocketShip.setRightPressed(true);
             }
-            //if((code == KeyEvent.VK_RIGHT) && (leftPressed)) {
-            //    rocketShip.setX(0);
-            //    rightPressed = true;
-            //}
         }
 
             @Override
             public void keyReleased(KeyEvent e) {
                 int code = e.getKeyCode();
-                if(code == KeyEvent.VK_UP){ // && (!downPressed)){
+                if(code == KeyEvent.VK_UP){
                    rocketShip.setUpPressed(false);
-                    //rocketShip.setY(0);
-                    //upPressed = false;
-                    //rotate();
                 }
-                //if((code == KeyEvent.VK_UP) && (downPressed)){
-                //    rocketShip.setY(2);
-                //    upPressed = false;
-                    //rotate();
-                //}
+
                 if(code == KeyEvent.VK_DOWN){
                     rocketShip.setDownPressed(false);
                 }
-                //if((code == KeyEvent.VK_DOWN) && (upPressed)){
-                //    rocketShip.setY(-2);
-                //    downPressed = false;
-                //}
-                if(code == KeyEvent.VK_LEFT){// && (!rightPressed)){
+
+                if(code == KeyEvent.VK_LEFT){
                     rocketShip.setLeftPressed(false);
                 }
-               // if((code == KeyEvent.VK_LEFT) && (rightPressed)){
-                    //rocketShip.setX(2);
-                    //leftPressed = false;
-                //}
-                if(code == KeyEvent.VK_RIGHT){// && (!leftPressed)){
+
+                if(code == KeyEvent.VK_RIGHT){
                     rocketShip.setRightPressed(false);
                 }
 
@@ -167,12 +146,16 @@ public class Game extends JFrame {
         entities = new LinkedList<Entity>();
         pendingEntities = new ArrayList<Entity>();
         rocketShip = new Ship();
-        addAsteroid(entities);
+
 
         //Sets everything back to its default values
         resetGame();
-
+        addAsteroid(entities);
         this.timer = new GameClockTimer(FPS);
+        for(int i = 0; i < 20; i++)
+        {
+            addAsteroid(entities);
+        }
         while(true) {
             //Gets the initial time of the start
             long start = System.nanoTime();
@@ -233,8 +216,4 @@ public class Game extends JFrame {
         Game game = new Game();
         game.startGame();
     }
-
-
-
-
 }
