@@ -136,7 +136,7 @@ public class Game extends JFrame {
 
     public void addAsteroid(List<Entity> entities) {
         Random rand = new Random();
-        entities.add(new Asteroid(new Movement(rand.nextInt(600),rand.nextInt(600)), new Movement(rand.nextInt(3), rand.nextInt(3)),10));
+        entities.add(new Asteroid(new Movement(rand.nextInt(1200),rand.nextInt(900)), new Movement(rand.nextInt(3), rand.nextInt(3)),100));
     }
 
     /**
@@ -152,7 +152,7 @@ public class Game extends JFrame {
         resetGame();
         addAsteroid(entities);
         this.timer = new GameClockTimer(FPS);
-        for(int i = 0; i < 20; i++)
+        for(int i = 0; i < 100; i++)
         {
             addAsteroid(entities);
         }

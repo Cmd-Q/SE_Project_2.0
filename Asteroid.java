@@ -29,10 +29,17 @@ public class Asteroid extends Entity{
 //        g.drawPolygon(xpoints, ypoints, xpoints.length); //Draw the Asteroid.
 //        g.fillPolygon(xpoints, ypoints, xpoints.length);
 
-        g.setColor (Color.darkGray);
-        g.draw3DRect (10, 10, 20, 20, true);
-//        g.draw3DRect (25, 110, 50, 75, false);
-//        g.fill3DRect (100, 10, 50, 75, true);
-//        g.fill3DRect (100, 110, 50, 75, false);
+        Random rnd = new Random();
+        int rc = rnd.nextInt(255)+1;
+        int rc2 = rnd.nextInt(255)+1;
+        int rc3 = rnd.nextInt(255)+1;
+        Color j = new Color(rc,rc2,rc3);
+
+        g.setColor (j);
+        g.draw3DRect (5,5,5,5, true);
+
+//        g.draw3DRect (200,200,200,200, false);
+//        g.fill3DRect (20,20,20,20, true);
+//        g.fill3DRect (20,20,20,20, true);
     }
 }
