@@ -11,6 +11,7 @@ import package1.game.gameUtil.Movement;
  */
 public class Asteroid extends Entity{
 
+    protected static int size = 15;
 
     public Asteroid(Movement position, Movement speed, double magnitude){
         super(position, speed, magnitude);
@@ -19,6 +20,17 @@ public class Asteroid extends Entity{
         this.speed = speed;
         this.magnitude = magnitude;
         this.rotation = 5.0f;
+    }
+
+    public static int getSize(){
+        return size;
+    }
+
+    @Override
+    public void handleInterception(Game game, Entity ent){
+        if(ent.getClass() != Asteroid.class){
+            killObject();
+        }
     }
 
     public void draw(Graphics2D g, Game game) {
@@ -36,7 +48,7 @@ public class Asteroid extends Entity{
         Color j = new Color(rc,rc2,rc3);
 
         g.setColor (j);
-        g.draw3DRect (5,5,5,5, true);
+        g.draw3DRect (size,size,size,size, true);
 
 //        g.draw3DRect (200,200,200,200, false);
 //        g.fill3DRect (20,20,20,20, true);

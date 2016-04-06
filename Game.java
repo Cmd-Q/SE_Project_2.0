@@ -23,6 +23,9 @@ import java.util.List;
  * Created by tyleranson on 3/15/16.
  */
 public class Game extends JFrame {
+    private int playerLives;
+    private boolean isGameOver;
+    protected int numAsteroids = 25;
 
 
     boolean rightPressed=false, leftPressed=false, downPressed=false,
@@ -61,6 +64,8 @@ public class Game extends JFrame {
      * a clock for handling updates to the game
      */
     private GameClockTimer timer;
+
+    public boolean gameOver;
 
 
 
@@ -136,7 +141,9 @@ public class Game extends JFrame {
 
     public void addAsteroid(List<Entity> entities) {
         Random rand = new Random();
-        entities.add(new Asteroid(new Movement(rand.nextInt(1200),rand.nextInt(900)), new Movement(rand.nextInt(3), rand.nextInt(3)),100));
+        double randomNumber = -3 + (3 + 3) * rand.nextDouble();
+        double randomNumber2 = -3 + (3 + 3) * rand.nextDouble();
+        entities.add(new Asteroid(new Movement(rand.nextInt(1200),rand.nextInt(900)), new Movement(randomNumber,randomNumber2),Asteroid.getSize()));
     }
 
     /**
@@ -147,22 +154,20 @@ public class Game extends JFrame {
         pendingEntities = new ArrayList<Entity>();
         rocketShip = new Ship();
 
-
         //Sets everything back to its default values
         resetGame();
-        addAsteroid(entities);
         this.timer = new GameClockTimer(FPS);
-        for(int i = 0; i < 100; i++)
+        for(int i = 0; i < numAsteroids; i++)
         {
             addAsteroid(entities);
         }
         while(true) {
             //Gets the initial time of the start
             long start = System.nanoTime();
-
+                updateGame();
             timer.update();
             for (int i = 0; i < 5 && timer.hasElapsedCycle(); i++){
-                updateGame();
+                //updateGame();
             }
             gui.repaint();
 
@@ -179,22 +184,49 @@ public class Game extends JFrame {
 
             }
         }
-
-
     }
 
     private void resetGame(){
+        this.playerLives = 0;
         clearLists();
     }
 
     private void updateGame(){
 
+        for(int i = 0; i < entities.size(); i++) {
+            Entity a = entities.get(i);
+            for(int j = i + 1; j < entities.size(); j++) {
+                Entity b = entities.get(j);
+                if(i != j && a.isIntercepting(b) && ((a == rocketShip && b != rocketShip))) {
+                    a.handleInterception(this, b);
+                    b.handleInterception(this, a);
+                }
+            }
+        }
+        Iterator<Entity> iterator = entities.iterator();
+        while (iterator.hasNext()){
+            if(iterator.next().isDeadObject()){
+                iterator.remove();
+            }
+        }
+            if(gameOver){
+                resetGame();
+            }
     }
 
     private void clearLists(){
         pendingEntities.clear();
         entities.clear();
         entities.add(rocketShip);
+    }
+
+    public void killPlayer(){
+        this.playerLives--;
+        gameOver = true;
+
+        if(playerLives == 0){
+            this.isGameOver = true;
+        }
     }
 
     /******************************************************************
