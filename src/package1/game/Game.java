@@ -1,24 +1,30 @@
 package package1.game;
 
 import package1.GameClockTimer;
-import package1.game.entity.Asteroid;
-import package1.game.entity.Entity;
-import package1.game.entity.Ship;
+import package1.game.entity.*;
 import package1.game.gameUtil.Movement;
 
 import javax.swing.*;
+import javax.swing.Timer;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.util.ArrayList;
-import java.util.LinkedList;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.List;
-import java.util.Random;
 
 /**
  * Created by tyleranson on 3/15/16.
  */
 public class Game extends JFrame {
+    private int playerLives;
+    private boolean isGameOver;
+    protected int numAsteroids = 10;
+    protected int numKillerAstoids = 10;
 
 
     boolean rightPressed=false, leftPressed=false, downPressed=false,
@@ -58,15 +64,21 @@ public class Game extends JFrame {
      */
     private GameClockTimer timer;
 
+    public boolean gameOver;
+
+    private Bullet bullet;
+    private killerAsteroid killerAsteroid;
 
     private Game() {
         super("ASTROYED");
 
+
         setLayout(new BorderLayout());
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setResizable(true);
+        setResizable(false);
 
         add(this.gui = new GUI(this), BorderLayout.CENTER);
+
 
         addKeyListener(new KeyAdapter(){ /******************************************************************
          * keyPressed method determines what keys are being pressed in
@@ -79,65 +91,41 @@ public class Game extends JFrame {
             if(code == KeyEvent.VK_UP){// && (!downPressed)){
                 rocketShip.setUpPressed(true);
             }
-            //if((code == KeyEvent.VK_UP) && (downPressed)){
-            //}
             if(code == KeyEvent.VK_DOWN){
                 rocketShip.setDownPressed(true);
             }
-            //if((code == KeyEvent.VK_DOWN) && (upPressed)){
-            //    rocketShip.setY(20);
-            //    downPressed = true;
-            //}
             if(code == KeyEvent.VK_LEFT){
                 rocketShip.setLeftPressed(true);
-
-                // ship.paintIcon(this, g2, x, y);
             }
-            //if((code == KeyEvent.VK_LEFT) && (rightPressed)){
-            //    rocketShip.setX(0);
-            //    leftPressed = true;
-            //}
             if(code == KeyEvent.VK_RIGHT){
                 rocketShip.setRightPressed(true);
             }
-            //if((code == KeyEvent.VK_RIGHT) && (leftPressed)) {
-            //    rocketShip.setX(0);
-            //    rightPressed = true;
-            //}
+            if(code == KeyEvent.VK_SPACE){
+                rocketShip.setFiring(true);
+            }
         }
 
             @Override
             public void keyReleased(KeyEvent e) {
                 int code = e.getKeyCode();
-                if(code == KeyEvent.VK_UP){ // && (!downPressed)){
+                if(code == KeyEvent.VK_UP){
                    rocketShip.setUpPressed(false);
-                    //rocketShip.setY(0);
-                    //upPressed = false;
-                    //rotate();
                 }
-                //if((code == KeyEvent.VK_UP) && (downPressed)){
-                //    rocketShip.setY(2);
-                //    upPressed = false;
-                    //rotate();
-                //}
+
                 if(code == KeyEvent.VK_DOWN){
                     rocketShip.setDownPressed(false);
                 }
-                //if((code == KeyEvent.VK_DOWN) && (upPressed)){
-                //    rocketShip.setY(-2);
-                //    downPressed = false;
-                //}
-                if(code == KeyEvent.VK_LEFT){// && (!rightPressed)){
+
+                if(code == KeyEvent.VK_LEFT){
                     rocketShip.setLeftPressed(false);
                 }
-               // if((code == KeyEvent.VK_LEFT) && (rightPressed)){
-                    //rocketShip.setX(2);
-                    //leftPressed = false;
-                //}
-                if(code == KeyEvent.VK_RIGHT){// && (!leftPressed)){
+
+                if(code == KeyEvent.VK_RIGHT){
                     rocketShip.setRightPressed(false);
                 }
-
+                if (code == KeyEvent.VK_SPACE){
+                    rocketShip.setFiring(false);
+                }
             }
 
         });
@@ -157,9 +145,22 @@ public class Game extends JFrame {
 
     public void addAsteroid(List<Entity> entities) {
         Random rand = new Random();
-        entities.add(new Asteroid(new Movement(rand.nextInt(600),rand.nextInt(600)), new Movement(rand.nextInt(3), rand.nextInt(3)),10));
+        double randomNumber = -3 + (3 + 3) * rand.nextDouble();
+        double randomNumber2 = -3 + (3 + 3) * rand.nextDouble();
+        entities.add(new Asteroid(new Movement(rand.nextInt(1200),rand.nextInt(900)), new Movement(randomNumber,randomNumber2),Asteroid.getSize()));
     }
-
+    public void addKillerAsteroid(List<Entity> entities) {
+        Random rand = new Random();
+        double randomNumber = -3 + (3 + 3) * rand.nextDouble();
+        double randomNumber2 = -3 + (3 + 3) * rand.nextDouble();
+        killerAsteroid a = (new killerAsteroid(new Movement(rand.nextInt(1200), rand.nextInt(900)), new Movement(randomNumber, randomNumber2), killerAsteroid.getSize()));
+        if (a.getPosition() != rocketShip.getPosition()) {
+            entities.add(a);
+        }
+    }
+    public void registerEntity(Entity entity) {
+        pendingEntities.add(entity);
+    }
     /**
      * Starts the game and keeps the game running.
      */
@@ -167,19 +168,24 @@ public class Game extends JFrame {
         entities = new LinkedList<Entity>();
         pendingEntities = new ArrayList<Entity>();
         rocketShip = new Ship();
-        addAsteroid(entities);
 
         //Sets everything back to its default values
         resetGame();
-
         this.timer = new GameClockTimer(FPS);
+        for(int i = 0; i < numAsteroids; i++)
+        {
+            addAsteroid(entities);
+        }
+        for(int i = 0; i < numKillerAstoids; i++){
+            addKillerAsteroid(entities);
+        }
         while(true) {
             //Gets the initial time of the start
             long start = System.nanoTime();
-
+                updateGame();
             timer.update();
             for (int i = 0; i < 5 && timer.hasElapsedCycle(); i++){
-                updateGame();
+                //updateGame();
             }
             gui.repaint();
 
@@ -196,22 +202,90 @@ public class Game extends JFrame {
 
             }
         }
-
-
     }
 
     private void resetGame(){
+        this.playerLives = 0;
         clearLists();
     }
 
-    private void updateGame(){
+    private void updateGame() {
 
+        entities.addAll(pendingEntities);
+        pendingEntities.clear();
+
+        // Collectible asteroids and Ship
+        for (int i = 0; i < entities.size(); i++) {
+            Entity a = entities.get(i);
+            for (int j = i + 1; j < entities.size(); j++) {
+                Entity b = entities.get(j);
+                if (i != j && a.isIntercepting(b) && ((a == rocketShip && b != rocketShip))) {
+//                    a.handleInterception(this, b);
+                    b.handleInterception(this, a);
+                }
+            }
+        }
+        // DOESNT DO ANYTHING
+//        // Killer Asteroid and Ship
+//        for (int i = 0; i < entities.size(); i++) {
+//            Entity a = entities.get(i);
+//            for (int j = i + 1; j < entities.size(); j++) {
+//                Entity b = entities.get(j);
+//                if (i != j && a.isIntercepting(b) && ((a == rocketShip && b != rocketShip))) {
+//                    if (a.getClass() == killerAsteroid.class || b.getClass() == killerAsteroid.class) {
+//                        gameOver = true;
+////                        JOptionPane.showConfirmDialog(null, "YOUR SHIP HAS BEEN ASTROYED!", "*****Game Over*****", JOptionPane.OK_CANCEL_OPTION);
+//                    }
+//                }
+//            }
+//        }
+        // Bullet and Killer asteroid
+            for (int i = 0; i < entities.size(); i++) {
+                Entity a = entities.get(i);
+                for (int j = i + 1; j < entities.size(); j++) {
+                    Entity b = entities.get(j);
+                    if(i != j && a.isIntercepting(b) && (a.getClass() == Bullet.class && b.getClass() == killerAsteroid.class)){
+                        a.handleInterception(this,b);
+                    }
+
+
+
+
+//                    if (i != j && a.isIntercepting(b) && ((a.getClass() == Bullet.class && b.getClass() == killerAsteroid.class ))) {
+//                        if (a.getClass() == killerAsteroid.class || b.getClass() == killerAsteroid.class) {
+//                            b.handleInterception(this, a);
+////                            gameOver = true;
+////                        JOptionPane.showConfirmDialog(null, "YOUR SHIP HAS BEEN ASTROYED!", "*****Game Over*****", JOptionPane.OK_CANCEL_OPTION);
+//                        }
+//                    }
+
+                Iterator<Entity> iterator = entities.iterator();
+                while (iterator.hasNext()) {
+                    if (iterator.next().isDeadObject()) {
+                        entities.remove(iterator);
+                        iterator.remove();
+                    }
+                }
+                if (gameOver) {
+                    resetGame();
+                }
+            }
+        }
     }
 
     private void clearLists(){
         pendingEntities.clear();
-        entities.clear();
+//        entities.clear();
         entities.add(rocketShip);
+    }
+
+    public void killPlayer(){
+        this.playerLives--;
+        gameOver = true;
+
+        if(playerLives == 0){
+            this.isGameOver = true;
+        }
     }
 
     /******************************************************************
@@ -219,11 +293,18 @@ public class Game extends JFrame {
      * @param args
      *****************************************************************/
     public static void main(String args[]) {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (UnsupportedLookAndFeelException e) {
+            e.printStackTrace();
+        }
         Game game = new Game();
         game.startGame();
     }
-
-
-
-
 }
