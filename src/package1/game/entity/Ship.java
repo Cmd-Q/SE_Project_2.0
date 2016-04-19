@@ -3,7 +3,6 @@ package package1.game.entity;
 import package1.game.Game;
 import package1.game.gameUtil.Movement;
 
-import javax.swing.*;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
@@ -20,7 +19,7 @@ public class Ship extends Entity {
     /**
      * The fastest our rocket ship can travel
      */
-    private static final double MAX_SPEED = 10;
+    private static final double MAX_SPEED = 8;
 
     /**
      * is the up button pressed
@@ -49,7 +48,7 @@ public class Ship extends Entity {
     private boolean fireBullet;
 
     public Ship() {
-        super(new Movement(600 / 2, 600 / 2), new Movement(0.0, 0.0), 10.0);
+        super(new Movement(1200 / 2, 900 / 2), new Movement(0.0, 0.0), 10.0);
         this.rotation = DEF_ROTATION;
         this.deadObject = false;
         this.upPressed = false;
@@ -59,6 +58,7 @@ public class Ship extends Entity {
         this.fireBullet = false;
         this.animationFrame = 0;
         this.bullets = new ArrayList<Bullet>();
+
     }
 
     /******************************************************************
@@ -91,7 +91,6 @@ public class Ship extends Entity {
 
 
 
-
     public void setFiring(boolean fireBullet){
         this.fireBullet = fireBullet;
     }
@@ -110,33 +109,43 @@ public class Ship extends Entity {
                 speed.controlSpeed().scale(MAX_SPEED);
             }
         }
+        if (!upPressed && !downPressed){
+
+            speed.scale(.975);
+        }
         if (downPressed){
             speed.add(new Movement(rotation).scale(-THRUST_MAGNITUDE/2));
             if (speed.getShipMagnitude() >= MAX_SPEED * MAX_SPEED) {
-                speed.controlSpeed().scale(MAX_SPEED);
+                speed.controlSpeed().scale(MAX_SPEED/2);
             }
         }
-        if (fireBullet){
+        if (fireBullet) {
+            if(game.bulletCount == 0){
+                Bullet bullet = new Bullet(this, rotation);
+                bullets.add(bullet);
+                game.registerEntity(bullet);
+                game.bulletCount++;
+            }
 
-            Bullet bullet = new Bullet(this, rotation);
-            bullets.add(bullet);
-            game.registerEntity(bullet);
-
-//            if(bullets > 7){
-//            Iterator<Bullet> iter = bullets.iterator();
-//            while (iter.hasNext()){
-//                Bullet bullet = iter.next();
-//                if(bullet.deadObject){
-//                    iter.remove();
-//                }
+        }
+        Iterator<Bullet> iter = bullets.iterator();
+            while (iter.hasNext()){
+                Bullet bullet = iter.next();
+                if(bullet.deadObject){
+                    iter.remove();
+                }
         }
     }
 
 
     @Override
     public void handleInterception(Game game, Entity ent){
-        if(ent.getClass() == Asteroid.class) {
-            game.killPlayer();
+        if(ent.getClass() == Collectable.class) {
+            ent.killObject();
+        }
+        if(ent.getClass() == killerAsteroid.class) {
+            killObject();
+
         }
     }
     /**

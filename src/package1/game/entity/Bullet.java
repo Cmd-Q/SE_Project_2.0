@@ -1,6 +1,7 @@
 package package1.game.entity;
 
 import package1.game.Game;
+import package1.game.SoundEffect;
 import package1.game.gameUtil.Movement;
 
 import java.awt.*;
@@ -12,14 +13,17 @@ import java.util.Random;
  */
 public class Bullet extends Entity {
 
-    protected static int size = 2;
+    private static final int MAX_LIFE = 50;
+    private int lifespan;
+
+    protected static int size = 4;
+    protected static double origin = -(size/2.0);
+
     public Bullet(Entity owner, double angle){
         super(new Movement(owner.position), new Movement(angle).scale(6.75),2.0);
-        this.deadObject = false;
-        this.position = position;
-        this.speed = speed;
-        this.magnitude = magnitude;
         this.rotation = 5.0f;
+        this.lifespan = MAX_LIFE;
+        this.speed.addSpeed(owner.speed);
     }
 
     public static int getSize(){
@@ -28,11 +32,16 @@ public class Bullet extends Entity {
 
     public void update(Game game){
         super.update(game);
-
+        this.lifespan--;
+        if(lifespan <= 0){
+            killObject();
+        }
+//        SoundEffect.SHOT.play();
     }
     @Override
     public void handleInterception(Game game, Entity ent){
         if(ent.getClass() == killerAsteroid.class){
+            killObject();
             ent.killObject();
         }
     }
@@ -46,9 +55,9 @@ public class Bullet extends Entity {
         Color j = new Color(rc,rc2,rc3);
 
         g.setColor (Color.red);
-        g.draw3DRect (size,size,size,size, true);
+        g.draw3DRect (size/2, size/2 ,size,size, true);
 
-        g.fill3DRect (size,size,size,size, true);
+        g.fill3DRect (size/2, size/2 ,size,size, true);
     }
 }
 

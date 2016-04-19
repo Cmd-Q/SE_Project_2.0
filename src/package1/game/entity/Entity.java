@@ -39,11 +39,12 @@ public abstract class Entity {
 
     /**
      * This will create a new entity.
+     *
      * @param position  The location of the Entity
-     * @param speed The speed that the entity is moving in a given direction
+     * @param speed     The speed that the entity is moving in a given direction
      * @param magnitude The size of the entity, will be used to determine collisions
      */
-    public Entity(Movement position, Movement speed, double magnitude){
+    public Entity(Movement position, Movement speed, double magnitude) {
         this.position = position;
         this.speed = speed;
         this.magnitude = magnitude;
@@ -54,15 +55,17 @@ public abstract class Entity {
     /******************************************************************
      * Roates the ship by the given amount (think degrees)
      * adds the requested rotation to the current position
+     *
      * @param degree an amount of rotation
      *****************************************************************/
-    public void rotate(double degree){
+    public void rotate(double degree) {
         this.rotation += degree;
         this.rotation %= Math.PI * 2;
     }
 
     /******************************************************************
      * gets where the object currently is
+     *
      * @return the position of the entity
      *****************************************************************/
     public Movement getPosition() {
@@ -70,7 +73,6 @@ public abstract class Entity {
     }
 
     /******************************************************************
-     *
      * @return
      *****************************************************************/
     public Movement getSpeed() {
@@ -78,7 +80,6 @@ public abstract class Entity {
     }
 
     /**
-     *
      * @return
      */
     public double getRotation() {
@@ -86,7 +87,6 @@ public abstract class Entity {
     }
 
     /**
-     *
      * @param rotation
      */
     public void setRotation(double rotation) {
@@ -94,7 +94,6 @@ public abstract class Entity {
     }
 
     /**
-     *
      * @return
      */
     public double getMagnitude() {
@@ -104,29 +103,36 @@ public abstract class Entity {
     /**
      * can tell the game that the object should be removed
      */
-    public void killObject(){
+    public void killObject() {
         this.deadObject = true;
     }
 
-    public boolean isDeadObject(){
+    public boolean isDeadObject() {
         return deadObject;
     }
+
     /**
-     *
      * @param game
      */
     public void update(Game game) {
         position.add(speed);
-        if(position.x < 0.0f) {
+        if (position.x < 0.0f) {
             position.x += GUI.WORLD_SIZE;
         }
-        if(position.y < 0.0f) {
-            position.y += GUI.WORLD_SIZE;
+        if (position.y < 0.0f) {
+            position.y += GUI.DWORLD_SIZE;
         }
         position.x %= GUI.WORLD_SIZE;
-        position.y %= GUI.WORLD_SIZE;
+        position.y %= GUI.DWORLD_SIZE;
     }
 
+    public boolean isIntercepting (Entity entity){
+
+    double radius = entity.getMagnitude() + getMagnitude();
+    return(position.getDistanceToSquared(entity.position) < radius *radius);
+    }
+
+    public abstract void handleInterception(Game game, Entity ent);
     /**
      *
      * @param g
