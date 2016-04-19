@@ -1,32 +1,31 @@
 package package1.game;
 
 import package1.GameClockTimer;
-import package1.game.entity.Asteroid;
-import package1.game.entity.Entity;
-import package1.game.entity.Ship;
+import package1.game.entity.*;
 import package1.game.gameUtil.Movement;
 
+import javax.sound.sampled.*;
 import javax.swing.*;
-import javax.swing.Timer;
+import java.applet.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
+import java.awt.geom.AffineTransform;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
 /**
  * Created by tyleranson on 3/15/16.
  */
-public class Game extends JFrame {
+public class Game extends JFrame{
     private int playerLives;
     private boolean isGameOver;
-    protected int numAsteroids = 25;
-
+    protected int numAsteroids = 0;
+    protected int numKillerAstoids = 10;
+    public int bulletCount = 0;
+    public Clip shot;
 
     boolean rightPressed=false, leftPressed=false, downPressed=false,
             upPressed=false;
@@ -67,12 +66,18 @@ public class Game extends JFrame {
 
     public boolean gameOver;
 
+    private Bullet bullet;
 
 
 
-    private Game() {
+
+    public Game()  {
         super("ASTROYED");
 
+        SoundEffect.BACKGROUND.play();
+
+        SoundEffect.init();
+        SoundEffect.volume = SoundEffect.Volume.MEDIUM;
 
         setLayout(new BorderLayout());
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -88,9 +93,12 @@ public class Game extends JFrame {
          *****************************************************************/
         @Override
         public void keyPressed(KeyEvent e) {
+
             int code = e.getKeyCode();
             if(code == KeyEvent.VK_UP){// && (!downPressed)){
                 rocketShip.setUpPressed(true);
+                if(!rocketShip.isDeadObject())
+                    SoundEffect.THRUST.loop();
             }
             if(code == KeyEvent.VK_DOWN){
                 rocketShip.setDownPressed(true);
@@ -101,13 +109,20 @@ public class Game extends JFrame {
             if(code == KeyEvent.VK_RIGHT){
                 rocketShip.setRightPressed(true);
             }
+            if(code == KeyEvent.VK_SPACE){
+                rocketShip.setFiring(true);
+                if(!rocketShip.isDeadObject())
+                    SoundEffect.SHOT.play();
+
+            }
         }
 
             @Override
             public void keyReleased(KeyEvent e) {
                 int code = e.getKeyCode();
                 if(code == KeyEvent.VK_UP){
-                   rocketShip.setUpPressed(false);
+                    rocketShip.setUpPressed(false);
+                    SoundEffect.THRUST.stop();
                 }
 
                 if(code == KeyEvent.VK_DOWN){
@@ -121,7 +136,11 @@ public class Game extends JFrame {
                 if(code == KeyEvent.VK_RIGHT){
                     rocketShip.setRightPressed(false);
                 }
-
+                if (code == KeyEvent.VK_SPACE){
+                    rocketShip.setFiring(false);
+                    bulletCount = 0;
+//                    SoundEffect.SHOT.stop();
+                }
             }
 
         });
@@ -143,28 +162,47 @@ public class Game extends JFrame {
         Random rand = new Random();
         double randomNumber = -3 + (3 + 3) * rand.nextDouble();
         double randomNumber2 = -3 + (3 + 3) * rand.nextDouble();
-        entities.add(new Asteroid(new Movement(rand.nextInt(1200),rand.nextInt(900)), new Movement(randomNumber,randomNumber2),Asteroid.getSize()));
+        pendingEntities.add(new Collectable(new Movement(rand.nextInt(1200),rand.nextInt(900)), new Movement(randomNumber,randomNumber2), Collectable.getSize()));
     }
 
+//    public void addAsteroid(Movement position, double magnitude, Movement speed) {
+//        entities.add(new Collectable(position,speed, magnitude));
+//    }
+    public void addKillerAsteroid(List<Entity> entities) {
+        Random rand = new Random();
+        double randomNumber = -3 + (3 + 3) * rand.nextDouble();
+        double randomNumber2 = -3 + (3 + 3) * rand.nextDouble();
+        killerAsteroid a = (new killerAsteroid(new Movement(rand.nextInt(1200), rand.nextInt(900)), new Movement(randomNumber, randomNumber2), killerAsteroid.getSize()));
+        if (a.getPosition() != rocketShip.getPosition()) {
+            pendingEntities.add(a);
+        }
+    }
+    public void registerEntity(Entity entity) {
+        pendingEntities.add(entity);
+    }
     /**
      * Starts the game and keeps the game running.
      */
-    private void startGame() {
+    public void startGame() {
         entities = new LinkedList<Entity>();
         pendingEntities = new ArrayList<Entity>();
         rocketShip = new Ship();
 
         //Sets everything back to its default values
-        resetGame();
+//        resetGame();
+        clearLists();
         this.timer = new GameClockTimer(FPS);
         for(int i = 0; i < numAsteroids; i++)
         {
             addAsteroid(entities);
         }
+        for(int i = 0; i < numKillerAstoids; i++){
+            addKillerAsteroid(entities);
+        }
         while(true) {
             //Gets the initial time of the start
             long start = System.nanoTime();
-                updateGame();
+            updateGame();
             timer.update();
             for (int i = 0; i < 5 && timer.hasElapsedCycle(); i++){
                 //updateGame();
@@ -188,36 +226,50 @@ public class Game extends JFrame {
 
     private void resetGame(){
         this.playerLives = 0;
-        clearLists();
+        Game g = new Game();
+        g.startGame();
+
     }
 
-    private void updateGame(){
+    private void resetToGame(List<Entity> copy){
 
-        for(int i = 0; i < entities.size(); i++) {
+    }
+
+    private void updateGame() {
+
+        entities.addAll(pendingEntities);
+        pendingEntities.clear();
+
+        //method that detects the shimmering blockss and "collects" them
+        for (int i = 0; i < entities.size(); i++) {
             Entity a = entities.get(i);
-            for(int j = i + 1; j < entities.size(); j++) {
+            for (int j = 0; j < entities.size(); j++) {
                 Entity b = entities.get(j);
-                if(i != j && a.isIntercepting(b) && ((a == rocketShip && b != rocketShip))) {
+                if (i != j && a.isIntercepting(b)) {
                     a.handleInterception(this, b);
-                    b.handleInterception(this, a);
+//                    b.handleInterception(this, a);
                 }
             }
         }
+
+
         Iterator<Entity> iterator = entities.iterator();
-        while (iterator.hasNext()){
-            if(iterator.next().isDeadObject()){
+        while (iterator.hasNext()) {
+            if (iterator.next().isDeadObject()) {
+                entities.remove(iterator);
                 iterator.remove();
             }
         }
-            if(gameOver){
-                resetGame();
-            }
+        if (gameOver) {
+            resetGame();
+        }
     }
+
 
     private void clearLists(){
         pendingEntities.clear();
-        entities.clear();
-        entities.add(rocketShip);
+//        entities.clear();
+        pendingEntities.add(rocketShip);
     }
 
     public void killPlayer(){
